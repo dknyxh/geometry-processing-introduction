@@ -5,10 +5,43 @@
 #include <igl/viewer/Viewer.h>
 #include <igl/edge_topology.h>
 #include <igl/jet.h>
+
+
+#include <igl/per_vertex_normals.h>
+#include <igl/per_face_normals.h>
+#include <igl/per_corner_normals.h>
+
+
+  Eigen::MatrixXd N_vertices;
+Eigen::MatrixXd N_faces;
+Eigen::MatrixXd N_corners;
+// This function is called every time a keyboard button is pressed
+bool key_down(igl::viewer::Viewer& viewer, unsigned char key, int modifier)
+{
+  switch(key)
+  {
+    case '1':
+      viewer.data.set_normals(N_faces);
+      return true;
+    case '2':
+      viewer.data.set_normals(N_vertices);
+      return true;
+    case '3':
+      viewer.data.set_normals(N_corners);
+      return true;
+    default: break;
+  }
+  return false;
+}
+
+
+
 int main(int argc, char *argv[])
 {
   Eigen::MatrixXd V;
   Eigen::MatrixXi F;
+
+
   // Load in a mesh
   igl::read_triangle_mesh(argc>1 ? argv[1] : "../shared/data/bunny.off", V, F);
 
@@ -33,9 +66,27 @@ Eigen::MatrixXd C;
   Eigen::VectorXd Z = V.col(2);
   igl::jet(Z,true,C);
 
-  viewer.data.set_colors(C);
+  //viewer.data.set_colors(C);
 
 
+  // Compute per-face normals
+  igl::per_face_normals(V,F,N_faces);
+
+  // Compute per-vertex normals
+  igl::per_vertex_normals(V,F,N_vertices);
+
+  // Compute per-corner normals, |dihedral angle| > 20 degrees --> crease
+  igl::per_corner_normals(V,F,20,N_corners);
+
+  // Plot the mesh
+  viewer.callback_key_down = &key_down;
+  viewer.core.show_lines = false;
+  viewer.data.set_mesh(V, F);
+  viewer.data.set_normals(N_faces);
+  std::cout<<
+    "Press '1' for per-face normals."<<std::endl<<
+    "Press '2' for per-vertex normals."<<std::endl<<
+    "Press '3' for per-corner normals."<<std::endl;
 
 
 
