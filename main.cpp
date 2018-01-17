@@ -11,12 +11,22 @@
 #include <igl/per_face_normals.h>
 #include <igl/per_corner_normals.h>
 
+
+#include <igl/decimate.h>
 #include <igl/euler_characteristic.h>
 
 
   Eigen::MatrixXd N_vertices;
 Eigen::MatrixXd N_faces;
 Eigen::MatrixXd N_corners;
+
+  Eigen::MatrixXd U;
+  Eigen::MatrixXi G;
+    Eigen::MatrixXd V;
+  Eigen::MatrixXi F;
+Eigen::VectorXi J;
+
+int faces_num = 10000;
 // This function is called every time a keyboard button is pressed
 bool key_down(igl::viewer::Viewer& viewer, unsigned char key, int modifier)
 {
@@ -31,6 +41,11 @@ bool key_down(igl::viewer::Viewer& viewer, unsigned char key, int modifier)
     case '3':
       viewer.data.set_normals(N_corners);
       return true;
+
+    case '4':
+      igl::decimate(V,F,faces_num,U,G,J);
+      faces_num = faces_num - 1000;
+      viewer.data.set_mesh(U,G);
     default: break;
   }
   return false;
@@ -40,12 +55,11 @@ bool key_down(igl::viewer::Viewer& viewer, unsigned char key, int modifier)
 
 int main(int argc, char *argv[])
 {
-  Eigen::MatrixXd V;
-  Eigen::MatrixXi F;
+
 
 
   // Load in a mesh
-  igl::read_triangle_mesh(argc>1 ? argv[1] : "../data/cube.off", V, F);
+  igl::read_triangle_mesh(argc>1 ? argv[1] : "../data/space_shuttle.off", V, F);
 
   Eigen::MatrixXi E = edges(F);
   int Chi = euler_characteristic(F);
