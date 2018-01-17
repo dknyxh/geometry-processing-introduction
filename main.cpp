@@ -14,7 +14,7 @@
 
 #include <igl/decimate.h>
 #include <igl/euler_characteristic.h>
-
+#include <cmath>
 
   Eigen::MatrixXd N_vertices;
 Eigen::MatrixXd N_faces;
@@ -44,8 +44,10 @@ bool key_down(igl::viewer::Viewer& viewer, unsigned char key, int modifier)
 
     case '4':
       igl::decimate(V,F,faces_num,U,G,J);
-      faces_num = faces_num - 1000;
+      faces_num = floor(faces_num * 0.9);
+      viewer.data.clear();
       viewer.data.set_mesh(U,G);
+      std::cout<<"Euler Characteristic: "<<euler_characteristic(G)<<std::endl;
     default: break;
   }
   return false;
